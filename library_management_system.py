@@ -4,17 +4,31 @@ from abc import ABC, abstractmethod
 import math
 
 class LibraryManagementSystem(ABC):
+    """ 
+    A library management system framework. 
+
+    Different frameworks (linear, binary, etc.) must implement insertion (shelve) and index resolution (_find_index)
+    """
+
     def __init__(self, books):
+        """ Creates a new library management system. """
         self._books = books
 
     def empty(self):
+        """ Creates an empty library with no books. """
         self.__init__([])
 
     @abstractmethod
     def shelve(self, book): 
+        """ A method that should add a book to the library. """
+        # might be able to make this work with _find_index, might be too complex 
         ...
 
     def unshelve(self, title): 
+        """ 
+        Removes and returns the book in the library with title. 
+        If the book is not in the library, None is returned and the library is not changed.
+        """
         index = self._find_index(title)
         if index is None:
             return None
@@ -22,6 +36,10 @@ class LibraryManagementSystem(ABC):
         return book
 
     def find(self, title):
+        """ 
+        Finds and returns the book in the library with title. 
+        If the book is not in the library, None is returned.
+        """
         index = self._find_index(title)
         if index is None:
             return None
@@ -30,37 +48,59 @@ class LibraryManagementSystem(ABC):
 
     @abstractmethod
     def _find_index(self, title):
+        """ A method that should find the position of the book with the given title. """
         ...
 
     def __str__(self): 
+        """ Returns a basic string representation of the library. """
         return "\n".join(map(str, self._books))
 
 class LinearSearchLMS(LibraryManagementSystem):
-    def __init__(self, books):
-        super().__init__(books)
+    """ 
+    A library that uses linear search to find books. 
+    Inserting is O(1).
+    Searching is O(n).
+    """
+
+    # not required because of inheiritance rules
+    # def __init__(self, books):
+    #     """ Returns a library with the specified books. """
+    #     super().__init__(books)
 
     def shelve(self, book): 
+        """ Shelves the book at the end of the library. """
         self._books.append(book)
 
     def _find_index(self, title):
+        """ Searches linearly for the position of the book with title. """
         for index, book in enumerate(self._books):
             if book.title().lower() == title.lower():
                 return index
         return None
 
 class BinarySearchLMS(LibraryManagementSystem):
+    """ 
+    A library that uses binary search to find books. 
+    Inserting is O(n). -- todo, use binary insertion
+    Searching is O(log n). -- todo, make binary search use bounds to handle duplicate key values
+    """
     def __init__(self, books):
+        """ Creates a new library with the specified books; sorts books for binary search. """
         super().__init__(books)
         self._books.sort(key=lambda book: self._key(book.title()))
 
     @staticmethod
     def _key(title):
+        """ 
+        Generates the values used to sort the books.
+        This implementation is simple and does not create very unique keys. 
+        TODO: make a better one that has less collisions and/or not case-sensitive (not required)
+        """
         return sum(map(ord, title))
 
     def shelve(self, book): 
         """ 
         Adds the specified book to the library. 
-
         Works in linear time.
         """
         # if no books are in the library, just add the book as the first
@@ -77,13 +117,12 @@ class BinarySearchLMS(LibraryManagementSystem):
         # if the book's key is the highest, add it at the end
         self._books.append(book)
 
-    def __str__(self):
-        string = ""
-        for book in self._books:
-            string += str(book) + " key: " + str(self._key(book.title())) + "\n"
-        return string
-
     def _find_index(self, title):
+        """ 
+        Uses binary search to find the position of the book with title. 
+        Because collisions can occur, it will narrow down the search to a small range and linearly find the correct title. 
+        TODO: make the small linear search smaller or 
+        """
         target_key = self._key(title)
         left = 0
         right = len(self._books) - 1
@@ -103,7 +142,21 @@ class BinarySearchLMS(LibraryManagementSystem):
                 break
         return None
 
+    # Used for inspecting key values and collisions
+    # def __str__(self):
+    #     string = ""
+    #     for book in self._books:
+    #         string += str(book) + " key: " + str(self._key(book.title())) + "\n"
+    #     return string
+
 def binary_search(collection, target_key, key):
+    """ 
+    A basic binary search in a sorted collection. 
+    
+    collection - the collection to search through
+    target_key - the key for the desired object
+    key - the function that generates keys from objects in the collection
+    """
     left = 0
     right = len(collection) - 1
 
