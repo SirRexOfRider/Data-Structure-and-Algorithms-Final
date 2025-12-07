@@ -13,7 +13,7 @@ def print_execution_time(function):
 		# a function that takes a while
 	
 	def main():
-		time_this()
+		time_this(arg_1_value, arg_2_value)
 
 	--- OUTPUT ---
 	"time_this executed in 2.305397 seconds."
