@@ -18,6 +18,9 @@ class LibraryManagementSystem(ABC):
         """ Creates an empty library with no books. """
         self.__init__([])
 
+    def __len__(self):
+        return len(self._books)
+
     @abstractmethod
     def shelve(self, book): 
         """ A method that should add a book to the library. """
@@ -94,7 +97,6 @@ class BinarySearchLMS(LibraryManagementSystem):
         """ 
         Generates the values used to sort the books.
         This implementation is simple and does not create very unique keys. 
-        TODO: make a better one that has less collisions and/or not case-sensitive (not required)
         """
         return sum(map(ord, title))
 
@@ -102,61 +104,66 @@ class BinarySearchLMS(LibraryManagementSystem):
         """ 
         Adds the specified book to the library. 
         Works in linear time.
+        TODO -- adapt a binary search to insert -> O(log n)
         """
         # if no books are in the library, just add the book as the first
-        if len(self._books) == 0:
+        if len(self) == 0:
             self._books.append(book)
             return 
-
         # otherwise, find the position of the book in the library
-        for index in range(len(self._books)):
+        for index in range(len(self)):
             if self._key(book.title()) <= self._key(self._books[index].title()):
                 self._books.insert(index, book)
                 return
-
         # if the book's key is the highest, add it at the end
         self._books.append(book)
 
     def _find_index(self, title):
         """ 
-        Uses binary search to find the position of the book with title. 
-        Because collisions can occur, it will narrow down the search to a small range and linearly find the correct title. 
-        TODO: make the small linear search smaller or 
+        Finds and returns the index of the book in the library with title. 
+        Uses binary search to find the books with the same keys then linearly searches for the book with the correct title. 
+        Average case -- O(log n) -- Reasonable key function and different books.
+        Worst case -- O(n) -- Would only occur if the key function was extremely bad or the same book had n occurences in the library. 
         """
-        target_key = self._key(title)
-        left = 0
-        right = len(self._books) - 1
-
-        while left <= right:
-            middle = left + math.floor((right - left) / 2)
-            if self._key(self._books[middle].title()) < target_key:
-                left = middle + 1
-            elif self._key(self._books[middle].title()) > target_key:
-                right = middle - 1
-            else:
-                if self._books[middle].title() == title:
-                    return middle
-                for i in range(left, right + 1):
-                    if self._books[i].title() == title:
-                        return i
-                break
+        first_occurence_index = lower_bound_binary_search(self._books, title, lambda book: self._key(book.title()))
+        if first_occurence_index is None:
+            return None
+        first_occurence_key = self._key(self._books[first_occurence_index].title())
+        index = first_occurence_index
+        for index in range(first_occurence_index, len(self)): 
+            book = self._books[index]
+            book_key = self._key(book.title())
+            # if the key no longer matches, then the book does not exist in the library
+            if book_key != first_occurence_key: 
+                return None
+            # if the book title matches, the book was found in the library
+            if book.title() == title:
+                return index
         return None
 
     # Used for inspecting key values and collisions
-    # def __str__(self):
-    #     string = ""
-    #     for book in self._books:
-    #         string += str(book) + " key: " + str(self._key(book.title())) + "\n"
-    #     return string
+    def __str__(self):
+        string = ""
+        for book in self._books:
+            string += str(book) + " key: " + str(self._key(book.title())) + "\n"
+        return string
 
-def binary_search(collection, target_key, key):
+# class HashMapLMS(LMS):
+#     def __init__(self, books): 
+#         super().__init__(books)
+#         self._hashmap = dict()
+
+
+
+def binary_search(collection, target, key):
     """ 
     A basic binary search in a sorted collection. 
-    
+
     collection - the collection to search through
-    target_key - the key for the desired object
+    target_key - the key of the desired object
     key - the function that generates keys from objects in the collection
     """
+    target_key = key(target)
     left = 0
     right = len(collection) - 1
 
@@ -169,6 +176,30 @@ def binary_search(collection, target_key, key):
         else:
             return middle
     return None
+
+def lower_bound_binary_search(collection, target, key):
+    """ 
+    Finds the first occurence of target_key in collection.  
+    Note -- in the case of duplicate keys, this function finds the first occurence.
+    
+    collection - the collection to search through
+    target_key - the key of the desired object
+    key - the function that generates keys from objects in the collection
+    """
+    target_key = key(target)
+    left = 0
+    right = len(collection) - 1
+    lower_bound = None;
+
+    while left <= right:
+        middle = left + math.floor((right - left) / 2)
+        if key(collection[middle]) < target_key:
+            left = middle + 1
+        else:
+            lower_bound = middle
+            right = middle - 1
+
+    return lower_bound
 
 # class Library:
 #     def __init__(self, listOfBooks):
