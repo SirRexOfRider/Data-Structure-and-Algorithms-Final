@@ -112,7 +112,7 @@ def print_benchmark(count):
 	max: 0.293488 seconds"
 
 	"""
-	if count >= 0: 
+	if count <= 0: 
 		raise ValueError("count must be greater or equal to 1 to benchmark")
 
 	def print_benchmark_decorator(function):
@@ -167,7 +167,7 @@ def benchmark(count):
 		(result, min_time, avg_time, max_time) = benchmark(10)(time_this)(arg_1_value, arg_2_value)
 	
 	"""
-	if count >= 0: 
+	if count <= 0: 
 		raise ValueError("count must be greater or equal to 1 to benchmark")
 
 	def benchmark_decorator(function):
