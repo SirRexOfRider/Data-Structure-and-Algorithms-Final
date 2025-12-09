@@ -15,7 +15,7 @@ class BinarySearchLMS(LibraryManagementSystem):
     def __init__(self, books, key=basic_key):
         """ Creates a new library with the specified books; sorts books for binary search. """
         super().__init__(books)
-        self._books.sort(key=lambda book: self._key(book.title()))
+        self._books.sort(key=lambda book: key(book.title()))
         self._key = key
 
     def shelve(self, book): 
