@@ -77,7 +77,7 @@ def time_execution(function):
 def print_benchmark(count):
 	""" 
 	A decorator that prints the minimum, average, and maximum execution time of a function over count calls.  
-	Executes the specified function count times and returns the last result.
+	NOTE -- Executes the specified function count times and returns the last result.
 
 	Usage:
 	### METHOD 1 ###
@@ -137,14 +137,13 @@ max: {maximum_execution_time:.6f} seconds""")
 		return benchmark_wrap
 	return print_benchmark_decorator
 
-
 def benchmark(count):
 	""" 
 	A decorator used to return the benchmark values of the given function over count executions.
-	Executes the specified function count times and returns the last result.
+	NOTE -- Executes the specified function count times and returns the last result.
+	
 	Wraps the original return value with the execution times in a tuple like: 
 	(result, minimum_execution_time, average_execution_time, maximum_execution_time) 
-
 
 	Usage:
 	### METHOD 1 ###

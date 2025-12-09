@@ -8,19 +8,24 @@ class BinarySearchLMS(LibraryManagementSystem):
     A library that uses binary search to find books. 
 
     Insertion and searching is O(log n). 
-
-    books - the books to initialize the library with. 
-    key (optional) - the key to sort and search the books with. 
     """
+
     def __init__(self, books, key=basic_key):
-        """ Creates a new library with the specified books; sorts books for binary search. """
+        """ 
+        Creates a new library with the specified books. 
+        Sorts books for binary search. 
+
+        books - the books to initialize the library with. 
+        key (optional) - the key function used to sort and search through the library. 
+        
+        """
         super().__init__(books)
         self._books.sort(key=lambda book: key(book.title()))
         self._key = key
 
     def shelve(self, book): 
         """ Adds the specified book to the library. """
-        insert_at_index = lower_bound_binary_search(self._books, book.title(), lambda book: self._key(book.title()))
+        insert_at_index = lower_bound_binary_search(self._books, self._key(book.title()), lambda book: self._key(book.title()))
         if insert_at_index is None:
             self._books.append(book)
         else:
@@ -36,7 +41,7 @@ class BinarySearchLMS(LibraryManagementSystem):
         
         NOTE -- CASE-SENSITIVE (even if key is not case-sensitive)
         """
-        first_occurence_index = lower_bound_binary_search(self._books, title, lambda book: self._key(book.title()))
+        first_occurence_index = lower_bound_binary_search(self._books, self._key(title), lambda book: self._key(book.title()))
         if first_occurence_index is None:
             return None
         first_occurence_key = self._key(self._books[first_occurence_index].title())
@@ -52,37 +57,7 @@ class BinarySearchLMS(LibraryManagementSystem):
                 return index
         return None
 
-    # Used for inspecting key values and collisions
-    def __str__(self):
-        string = ""
-        for book in self._books:
-            string += str(book) + " key: " + str(self._key(book.title())) + "\n"
-        return string
-
-# not currently used, lower_bound_binary_search_has more functionality
-# def binary_search(collection, target, key):
-#     """ 
-#     A basic binary search in a sorted collection. 
-
-#     collection - the collection to search through
-#     target_key - the key of the desired object
-#     key - the function that generates keys from objects in the collection
-#     """
-#     target_key = key(target)
-#     left = 0
-#     right = len(collection) - 1
-
-#     while left <= right:
-#         middle = left + math.floor((right - left) / 2)
-#         if key(collection[middle]) < target_key:
-#             left = middle + 1
-#         elif key(collection[middle]) > target_key:
-#             right = middle - 1
-#         else:
-#             return middle
-#     return None
-
-def lower_bound_binary_search(collection, target, key=lambda x: x):
+def lower_bound_binary_search(collection, target_key, key=lambda x: x):
     """ 
     Finds the first occurence of or where to insert target_key in collection.  
     Note -- in the case of duplicate keys, this function finds the first occurence.
@@ -92,7 +67,6 @@ def lower_bound_binary_search(collection, target, key=lambda x: x):
     key (optional) - the function that generates keys from objects in the collection. 
         If the keys are the objects themselves, there is no need to specify the key. 
     """
-    target_key = key(target)
     left = 0
     right = len(collection) - 1
     lower_bound = None;

@@ -18,5 +18,6 @@ class LinearSearchLMS(LibraryManagementSystem):
         """
         for index, book in enumerate(self._books):
             if book.title() == title:
+                print(f"{index=}")
                 return index
         return None

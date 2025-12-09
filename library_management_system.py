@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import copy
 
 class LibraryManagementSystem(ABC):
     """ 
@@ -8,8 +9,11 @@ class LibraryManagementSystem(ABC):
     """
 
     def __init__(self, books):
-        """ Creates a new library management system. """
-        self._books = books
+        """ 
+        Creates a new library management system with the specified books. 
+        Makes a deep copy of the books. 
+        """
+        self._books = copy.deepcopy(books)
 
     def empty(self):
         """ Creates an empty library with no books. """
