@@ -131,7 +131,7 @@ class BinarySearchLMS(LibraryManagementSystem):
         first_occurence_key = self._key(self._books[first_occurence_index].title())
         index = first_occurence_index
         for index in range(first_occurence_index, len(self)): 
-            book = self._books[index]
+            book = self._books[index]   
             book_key = self._key(book.title())
             # if the key no longer matches, then the book does not exist in the library
             if book_key != first_occurence_key: 

@@ -1,15 +1,18 @@
-from timer import print_execution_time
+from timer import *
 # import csv
 
 from book_csv import read_n_books_from_csv_file, BookCsvFormatError
 from library_management_system import LinearSearchLMS, BinarySearchLMS, lower_bound_binary_search
 from book import Book
 
+def func(blms, title):
+	return blms.find(title)
+
 def main():
 	print("Hello World!")
 	books = []
 	try:
-		books = read_n_books_from_csv_file("books.csv", 10)
+		books = read_n_books_from_csv_file("books.csv", 1000)
 	except BookCsvFormatError as e:
 		print(f"{e}")
 
@@ -26,6 +29,8 @@ def main():
 	print(blms)
 	title = "ClashofCaivilizations"
 	print(f"{blms._key(title)}")
+	book = print_benchmark(10)(func)(blms, "The Drunkard's Walk")
+	# print(f"time: {time} s")
 	print(f"found: {blms.find(title)}")
 	print(f"found: {blms.find("The Drunkard's Walk")}")
 
