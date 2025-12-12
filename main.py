@@ -14,9 +14,11 @@ def test():
 	for i in range(1000):
 		for j in range(1000):
 			i * j
+	return 1
 
 def main():
-	test()
+	result = test()
+	print(result)
 	# benchmarker = Benchmarker()
 	# benchmarker.add_time(1000000)
 	# benchmarker.add_function_call(test)()

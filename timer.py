@@ -62,14 +62,16 @@ class Benchmarker:
 
 	def add_function_call(self, function):
 		""" 
-		Adds the time it took to execute the specified function. 
+		Adds the time it took to execute the specified function.
+		Returns the function's result. 
 
 		USAGE: 
 
 		def time_this(arg_1, arg_2):
 			# doing something here
 
-		benchmarker.add_function_call(time_this)(arg_1_value, arg_2_value)
+		def main():
+			result = benchmarker.add_function_call(time_this)(arg_1_value, arg_2_value)
 		
 		Note -- in the case that the specified function has no args, 
 			be sure to use the function like so:
@@ -315,7 +317,7 @@ def print_benchmark(count, total_formatter=SecondsFormatter.AUTO, stats_formatte
 				result = benchmarker.add_function_call(function)(*args, **kwargs)
 			print(f"--- {function.__name__} benchmark results ---")
 			print(benchmarker)
-			return (result, benchmarker)
+			return result
 		return benchmark_wrapper
 	return benchmark_decorator
 
