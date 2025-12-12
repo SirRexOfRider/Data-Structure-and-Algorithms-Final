@@ -11,6 +11,7 @@ class HashMapLMS(LibraryManagementSystem):
 	def __init__(self, books):
 		"""
 		Creates a new library with the specified books.
+        Makes a deep copy of the books. 
 
 	    books - the books to initialize the library with.  
 		"""

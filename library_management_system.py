@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import copy
+import random
 
 class LibraryManagementSystem(ABC):
     """ 
@@ -54,6 +55,9 @@ class LibraryManagementSystem(ABC):
     def _find_index(self, title):
         """ A method that should find the position of the book with the given title. """
         ...
+
+    def random_book(self):
+        return random.choice(self._books)
 
     def __str__(self): 
         """ Returns a basic string representation of the library. """

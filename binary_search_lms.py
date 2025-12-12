@@ -13,11 +13,12 @@ class BinarySearchLMS(LibraryManagementSystem):
     def __init__(self, books, key=basic_key):
         """ 
         Creates a new library with the specified books. 
+        Makes a deep copy of the books. 
         Sorts books for binary search. 
 
         books - the books to initialize the library with. 
         key (optional) - the key function used to sort and search through the library. 
-        
+
         """
         super().__init__(books)
         self._books.sort(key=lambda book: key(book.title()))

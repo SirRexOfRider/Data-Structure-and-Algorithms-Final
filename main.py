@@ -7,22 +7,57 @@ from book import Book
 import title_keys
 import book_csv
 
+import time
+
+def prompt_user_for_number_in_range(prompt, lower, upper):
+	""" Prompts the user for a value between lower and upper using prompt. """
+	print(prompt)
+	n = None
+	while n is None:
+		user_input = int(input())
+		if user_input < lower or user_input > upper:
+			print(f"Please choose a value between {lower} and {upper}.")
+		else:
+			n = user_input
+	return n
+
+@print_benchmark(10)
+def test():
+	for i in range(1000):
+		for j in range(1000):
+			i * j
+
 def main():
-	books = []
-	try:
-		books = book_csv.read_n_books_from_csv_file("data/large_books_file.csv", 100)
-	except BookCsvFormatError as e:
-		print(f"{e}")
+	test()
+	# print(TimePrefix.AUTO.get_string(1_000_000_000_000))
+	# n = prompt_user_for_number_in_range("How many books do you want to add to the libraries?", 1, 1_000_000)
 
-	llms = print_benchmark(1)(LinearSearchLMS)(books)
-	blms = print_benchmark(1)(BinarySearchLMS)(books, key=title_keys.positional_ord)
-	hlms = print_benchmark(1)(HashMapLMS)(books)
+	# books = []
+	# try:
+	# 	books = book_csv.read_n_books_from_csv_file("data/large_books_file.csv", 10000)
+	# except BookCsvFormatError as e:
+	# 	print(f"Error while parsing books: {e}")
 
-	title = "Thinking through the skin" #"Every Day in the Year"
-	print()
-	print(print_benchmark(1)(llms.find)(title))
-	print(print_benchmark(1)(blms.find)(title))
-	print(print_benchmark(1)(hlms.find)(title))
+	# n = prompt_user_for_number_in_range("How many times do you want to initialize the libraries?", 1, 100)
+
+	# llms = print_benchmark(n)(LinearSearchLMS)(books)
+	# blms = print_benchmark(n)(BinarySearchLMS)(books)
+	# hlms = print_benchmark(n)(HashMapLMS)(books)
+
+	# llms = LinearSearchLMS(books)
+	# blms = BinarySearchLMS(books)
+	# hlms = HashMapLMS(books)
+
+	# print_execution_time_ns(llms.find)(llms.random_book().title())
+
+	# n = prompt_user_for_number_in_range("How many times do you want to run the search function?", 1, 1_000_000)
+
+	# print("Linear search library results: ")
+	# print_benchmark(n)(test_find)(llms)
+	# print("Binary search library results: ")
+	# print_benchmark(n)(test_find)(blms)
+	# print("Hash map library results: ")
+	# print_benchmark(n)(test_find)(hlms)
 
 if __name__ == "__main__":
 	main()
