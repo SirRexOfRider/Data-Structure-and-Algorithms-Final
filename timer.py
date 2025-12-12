@@ -9,11 +9,12 @@ from enum import Enum
 class SecondsFormatter(Enum):
 	""" 
 	An enum used to convert seconds between metric prefixes on seconds. 
+
 	SecondsPrefix.SECONDS represents seconds,
 	SecondsPrefix.MILLISECONDS represents milliseconds,
 	SecondsPrefix.MICROSECONDS represents microseconds, 
 	SecondsPrefix.NANOSECONDS represents nanoseconds, and 
-	SecondsPrefix.AUTO automatically selects the best conversion and should be used as the default. 
+	SecondsPrefix.AUTO automatically selects the most human-readable conversion and should be used as the default. 
 	"""
 	SECONDS = 9
 	MILLISECONDS = 6
@@ -58,6 +59,28 @@ class Benchmarker:
 		self._total_ns += nanoseconds
 		self._min_ns = min(self._min_ns, nanoseconds)
 		self._max_ns = max(self._max_ns, nanoseconds)
+
+	def add_function_call(self, function):
+		""" 
+		Adds the time it took to execute the specified function. 
+
+		USAGE: 
+
+		def time_this(arg_1, arg_2):
+			# doing something here
+
+		benchmarker.add_function_call(time_this)(arg_1_value, arg_2_value)
+		
+		Note -- in the case that the specified function has no args, 
+			be sure to use the function like so:
+		benchmarker.add_function_call(time_this)()
+
+		"""
+		def add_function_call_wrapper(*args, **kwargs):
+			result, execution_time_in_ns = time_execution(function)(*args, **kwargs)
+			self.add_time(execution_time_in_ns)
+			return result
+		return add_function_call_wrapper
 
 	def count(self):
 		""" Returns the total amount of executions measured. """
@@ -121,7 +144,7 @@ def print_execution_time(formatter=SecondsFormatter.AUTO):
 	#################### METHOD 1 ####################
 	Will always print execution time whenever the function is called.
 	
-	@print_execution_time()
+	@print_execution_time() # note the empty parentheses
 	def time_this(arg_1, arg_2):
 		# doing something here
 	
@@ -138,7 +161,7 @@ def print_execution_time(formatter=SecondsFormatter.AUTO):
 		# doing something here
 
 	def main():
-		result = print_execution_time()(time_this)(arg_1_value, arg_2_value)
+		result = print_execution_time()(time_this)(arg_1_value, arg_2_value) # note the empty parentheses
 
 	--- OUTPUT ---
 	"time_this executed in 2.074 seconds."
@@ -164,15 +187,12 @@ def print_execution_time(formatter=SecondsFormatter.AUTO):
 
 	"""
 	def print_execution_time_decorator(function):
-		def timing_wrap(*args, **kwargs):
-			start = time.perf_counter_ns()
-			result = function(*args, **kwargs)
-			end = time.perf_counter_ns()
-			execution_time_in_ns = end - start
+		def print_execution_time_wrapper(*args, **kwargs):
+			result, execution_time_in_ns = time_execution(function)(*args, **kwargs)
 			converted_execution_time, converted_execution_time_name = formatter.convert(execution_time_in_ns)
 			print(f"{function.__name__} executed in {converted_execution_time:.3f} {converted_execution_time_name}.")
 			return result
-		return timing_wrap
+		return print_execution_time_wrapper
 	return print_execution_time_decorator
 
 def time_execution(function):
@@ -203,13 +223,17 @@ def time_execution(function):
 		result, execution_time_in_ns = time_execution(time_this)(arg_1_value, arg_2_value)
 
 	"""
-	def timing_wrap(*args, **kwargs):
+	def time_execution_wrapper(*args, **kwargs):
 		start = time.perf_counter_ns()
 		result = function(*args, **kwargs)
 		end = time.perf_counter_ns()
 		execution_time_in_ns = end - start
 		return (result, execution_time_in_ns)
-	return timing_wrap
+	return time_execution_wrapper
+
+#######################################################
+############### BENCHMARKING DECORATORS ###############
+#######################################################
 
 def print_benchmark(count, total_formatter=SecondsFormatter.AUTO, stats_formatter=SecondsFormatter.AUTO):
 	""" 
@@ -285,18 +309,14 @@ def print_benchmark(count, total_formatter=SecondsFormatter.AUTO, stats_formatte
 		raise ValueError("count must be greater or equal to 1 to benchmark")
 
 	def benchmark_decorator(function):
-		def benchmark_wrap(*args, **kwargs):
+		def benchmark_wrapper(*args, **kwargs):
 			benchmarker = Benchmarker(total_formatter, stats_formatter)
-			for i in range(count):
-				start = time.perf_counter_ns()
-				result = function(*args, **kwargs)
-				end = time.perf_counter_ns()
-				execution_time = end - start
-				benchmarker.add_time(execution_time)
+			for _ in range(count):
+				result = benchmarker.add_function_call(function)(*args, **kwargs)
 			print(f"--- {function.__name__} benchmark results ---")
 			print(benchmarker)
 			return (result, benchmarker)
-		return benchmark_wrap
+		return benchmark_wrapper
 	return benchmark_decorator
 
 def benchmark(count):
@@ -357,195 +377,10 @@ def benchmark(count):
 		raise ValueError("count must be greater or equal to 1 to benchmark")
 
 	def benchmark_decorator(function):
-		def benchmark_wrap(*args, **kwargs):
+		def benchmark_wrapper(*args, **kwargs):
 			benchmarker = Benchmarker()
 			for _ in range(count):
-				start = time.perf_counter_ns()
-				result = function(*args, **kwargs)
-				end = time.perf_counter_ns()
-				execution_time = end - start
-				benchmarker.add_time(execution_time)
+				result = benchmarker.add_function_call(function)(*args, **kwargs)
 			return (result, benchmarker)
-		return benchmark_wrap
+		return benchmark_wrapper
 	return benchmark_decorator
-
-
-""" 
-	A decorator used to return the execution time of the given function.
-	Wraps the original return value with the execution time in a tuple like: 
-	(result, execution_time) 
-
-	Usage:
-	### METHOD 1 ###
-	Note -- will always return (result, time) whenever the function is called.
-	
-	@time_execution
-	def time_this(arg_1, arg_2):
-		# a function that takes a while
-	
-	def main():
-		(result, time) = time_this(arg_1_value, arg_2_value)
-
-	### METHOD 2 ###
-
-	def time_this(arg_1, arg_2):
-		# a function that takes a while
-
-	def main():
-		(result, time) = time_execution(time_this)(arg_1_value, arg_2_value)
-	
-	"""
-
-# def print_execution_time(function):
-	# """ 
-	# A decorator used to print the execution time of the given function. 
-
-	# Usage:
-	# ### METHOD 1 ###
-	# Note -- will always print whenever the function is called.
-	
-	# @print_execution_time
-	# def time_this(arg_1, arg_2):
-	# 	# a function that takes a while
-	
-	# def main():
-	# 	time_this(arg_1_value, arg_2_value)
-
-	# --- OUTPUT ---
-	# "time_this executed in 2.305397 seconds."
-
-	# ### METHOD 2 ###
-
-	# def time_this(arg_1, arg_2):
-	# 	# a function that takes a while
-
-	# def main():
-	# 	print_execution_time(time_this)(arg_1_value, arg_2_value)
-
-	# --- OUTPUT ---
-	# "time_this executed in 2.074378 seconds."
-
-	# """
-# 	def timing_wrap(*args, **kwargs):
-# 		start = time.perf_counter()
-# 		result = function(*args, **kwargs)
-# 		end = time.perf_counter()
-# 		execution_time = end - start
-# 		print(f"{function.__name__} executed in {execution_time:.6f} seconds.")
-# 		return result
-# 	return timing_wrap
-
-
-# def print_benchmark(count):
-# 	""" 
-# 	A decorator that prints the minimum, average, and maximum execution time of a function over count calls.  
-# 	NOTE -- Executes the specified function count times and returns the last result.
-
-# 	Usage:
-# 	### METHOD 1 ###
-# 	Always prints whenever the function is called.
-	
-# 	@print_benchmark(10)
-# 	def time_this(arg_1, arg_2):
-# 		# a function that takes a while
-	
-# 	def main():
-# 		time_this(arg_1_value, arg_2_value)
-
-# 	--- OUTPUT ---
-# 	"time_this executed 10 times:
-# 	min: 0.098723 seconds
-# 	avg: 0.153283 seconds
-# 	max: 0.293488 seconds"
-
-# 	### METHOD 2 ###
-# 	Used to selectively benchmark.
-
-# 	def time_this(arg_1, arg_2):
-# 		# a function that takes a while
-
-# 	def main():
-# 		print_benchmark(10)(time_this)(arg_1_value, arg_2_value)
-
-# 	--- OUTPUT ---
-# 	"time_this executed 10 times:
-# 	min: 0.098723 seconds
-# 	avg: 0.153283 seconds
-# 	max: 0.293488 seconds"
-
-# 	"""
-# 	if count <= 0: 
-# 		raise ValueError("count must be greater or equal to 1 to benchmark")
-
-# 	def print_benchmark_decorator(function):
-# 		def benchmark_wrap(*args, **kwargs):
-# 			minimum_execution_time = math.inf
-# 			maximum_execution_time = 0
-# 			total_execution_time = 0
-# 			for i in range(count):
-# 				start = time.perf_counter()
-# 				result = function(*args, **kwargs)
-# 				end = time.perf_counter()
-# 				execution_time = end - start
-# 				minimum_execution_time = min(execution_time, minimum_execution_time)
-# 				maximum_execution_time = max(execution_time, maximum_execution_time)
-# 				total_execution_time += execution_time
-# 			average_execution_time = total_execution_time / count
-# 			print(f"""{function.__name__} executed {count} times: 
-# min: {minimum_execution_time:.6f} seconds
-# avg: {average_execution_time:.6f} seconds
-# max: {maximum_execution_time:.6f} seconds""")
-# 			return result
-# 		return benchmark_wrap
-# 	return print_benchmark_decorator
-
-# def benchmark(count):
-# 	""" 
-# 	A decorator used to return the benchmark values of the given function over count executions.
-# 	NOTE -- Executes the specified function count times and returns the last result.
-	
-# 	Wraps the original return value with the execution times in a tuple like: 
-# 	(result, minimum_execution_time, average_execution_time, maximum_execution_time) 
-
-# 	Usage:
-# 	### METHOD 1 ###
-# 	Note -- will always return (result, min_time, avg_time, max_time) whenever the function is called.
-
-	
-# 	@benchmark(10)
-# 	def time_this(arg_1, arg_2):
-# 		# a function that takes a while
-	
-# 	def main():
-# 		(result, min_time, avg_time, max_time) = time_this(arg_1_value, arg_2_value)
-
-# 	### METHOD 2 ###
-
-# 	def time_this(arg_1, arg_2):
-# 		# a function that takes a while
-
-# 	def main():
-# 		(result, min_time, avg_time, max_time) = benchmark(10)(time_this)(arg_1_value, arg_2_value)
-	
-# 	"""
-# 	if count <= 0: 
-# 		raise ValueError("count must be greater or equal to 1 to benchmark")
-
-# 	def benchmark_decorator(function):
-# 		def benchmark_wrap(*args, **kwargs):
-# 			minimum_execution_time = math.inf
-# 			maximum_execution_time = 0
-# 			total_execution_time = 0
-# 			for i in range(count):
-# 				start = time.perf_counter()
-# 				result = function(*args, **kwargs)
-# 				end = time.perf_counter()
-# 				execution_time = end - start
-# 				minimum_execution_time = min(execution_time, minimum_execution_time)
-# 				maximum_execution_time = max(execution_time, maximum_execution_time)
-# 				total_execution_time += execution_time
-# 			average_execution_time = total_execution_time / count
-# 			return (result, minimum_execution_time, average_execution_time, maximum_execution_time)
-# 		return benchmark_wrap
-# 	return benchmark_decorator
-

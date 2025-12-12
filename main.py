@@ -9,19 +9,7 @@ import book_csv
 
 import time
 
-def prompt_user_for_number_in_range(prompt, lower, upper):
-	""" Prompts the user for a value between lower and upper using prompt. """
-	print(prompt)
-	n = None
-	while n is None:
-		user_input = int(input())
-		if user_input < lower or user_input > upper:
-			print(f"Please choose a value between {lower} and {upper}.")
-		else:
-			n = user_input
-	return n
-
-@print_benchmark(10)
+@print_benchmark(100)
 def test():
 	for i in range(1000):
 		for j in range(1000):
@@ -29,6 +17,14 @@ def test():
 
 def main():
 	test()
+	# benchmarker = Benchmarker()
+	# benchmarker.add_time(1000000)
+	# benchmarker.add_function_call(test)()
+	# benchmarker.add_function_call(test)()
+	# benchmarker.add_function_call(test)()
+
+	# print(benchmarker)
+	# test()
 	# print(TimePrefix.AUTO.get_string(1_000_000_000_000))
 	# n = prompt_user_for_number_in_range("How many books do you want to add to the libraries?", 1, 1_000_000)
 
